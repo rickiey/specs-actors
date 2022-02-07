@@ -767,6 +767,13 @@ func (a Actor) PreCommitSectorBatch(rt Runtime, params *PreCommitSectorBatchPara
 			// AggregateFee applied to fee debt to consolidate burn with outstanding debts
 			err := st.ApplyPenalty(aggregateFee)
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+			if !aggregateFee.NilOrZero() && err == nil {
+				PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), aggregateFee.String(),
+					"PreCommitSectorBatch", "")
+				rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+					rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), aggregateFee.String(),
+					"PreCommitSectorBatch", ""))
+			}
 		}
 
 		// available balance already accounts for fee debt so it is correct to call
