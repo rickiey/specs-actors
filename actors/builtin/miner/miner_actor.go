@@ -601,6 +601,15 @@ func (a Actor) DisputeWindowedPoSt(rt Runtime, params *DisputeWindowedPoStParams
 
 			err := st.ApplyPenalty(penaltyTarget)
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+
+			if !penaltyTarget.NilOrZero() && err == nil {
+				PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), penaltyTarget.String(),
+					"DisputeWindowedPoSt", "")
+				rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+					rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), penaltyTarget.String(),
+					"DisputeWindowedPoSt", ""))
+			}
+
 			penaltyFromVesting, penaltyFromBalance, err := st.RepayPartialDebtInPriorityOrder(store, currEpoch, rt.CurrentBalance())
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to pay debt")
 			toBurn = big.Add(penaltyFromVesting, penaltyFromBalance)
@@ -750,6 +759,13 @@ func (a Actor) PreCommitSectorBatch(rt Runtime, params *PreCommitSectorBatchPara
 			// AggregateFee applied to fee debt to consolidate burn with outstanding debts
 			err := st.ApplyPenalty(aggregateFee)
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+			if !aggregateFee.NilOrZero() && err == nil {
+				PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), aggregateFee.String(),
+					"ApplyRewards", "")
+				rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+					rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), aggregateFee.String(),
+					"ApplyRewards", ""))
+			}
 		}
 
 		// available balance already accounts for fee debt so it is correct to call
@@ -1861,6 +1877,15 @@ func (a Actor) ApplyRewards(rt Runtime, params *builtin.ApplyRewardParams) *abi.
 		// If the miner incurred block mining penalties charge these to miner's fee debt
 		err = st.ApplyPenalty(params.Penalty)
 		builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+
+		if !params.Penalty.NilOrZero() && err == nil {
+			PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), params.Penalty.String(),
+				"ApplyRewards", "")
+			rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+				rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), params.Penalty.String(),
+				"ApplyRewards", ""))
+		}
+
 		// Attempt to repay all fee debt in this call. In most cases the miner will have enough
 		// funds in the *reward alone* to cover the penalty. In the rare case a miner incurs more
 		// penalty than it can pay for with reward and existing funds, it will go into fee debt.
@@ -1932,6 +1957,14 @@ func (a Actor) ReportConsensusFault(rt Runtime, params *ReportConsensusFaultPara
 
 		err := st.ApplyPenalty(faultPenalty)
 		builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+
+		if !faultPenalty.NilOrZero() && err == nil {
+			PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), faultPenalty.String(),
+				"ReportConsensusFault", "")
+			rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+				rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), faultPenalty.String(),
+				"ReportConsensusFault", ""))
+		}
 
 		// Pay penalty
 		penaltyFromVesting, penaltyFromBalance, err := st.RepayPartialDebtInPriorityOrder(adt.AsStore(rt), currEpoch, rt.CurrentBalance())
@@ -2461,6 +2494,13 @@ func processEarlyTerminations(rt Runtime, rewardSmoothed smoothing.FilterEstimat
 		// Pay penalty
 		err = st.ApplyPenalty(penalty)
 		builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+		if !penalty.NilOrZero() && err == nil {
+			PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), penalty.String(),
+				"processEarlyTerminations", "")
+			rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+				rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), penalty.String(),
+				"processEarlyTerminations", ""))
+		}
 
 		// Remove pledge requirement.
 		err = st.AddInitialPledge(totalInitialPledge.Neg())
@@ -2534,6 +2574,15 @@ func handleProvingDeadline(rt Runtime,
 			err = st.ApplyPenalty(depositToBurn)
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
 			rt.Log(rtt.DEBUG, "storage provider %s penalized %s for expired pre commits", rt.Receiver(), depositToBurn)
+
+			if !depositToBurn.NilOrZero() && err == nil {
+				PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), depositToBurn.String(),
+					"handleProvingDeadline", "depositToBurn")
+				rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+					rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), depositToBurn.String(),
+					"handleProvingDeadline", "depositToBurn"))
+			}
+
 		}
 
 		// Record whether or not we _had_ early terminations in the queue before this method.
@@ -2557,6 +2606,13 @@ func handleProvingDeadline(rt Runtime,
 
 			err = st.ApplyPenalty(penaltyTarget)
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
+			if !penaltyTarget.NilOrZero() && err == nil {
+				PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), penaltyTarget.String(),
+					"handleProvingDeadline", "penaltyTarget")
+				rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
+					rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), penaltyTarget.String(),
+					"handleProvingDeadline", "penaltyTarget"))
+			}
 			rt.Log(rtt.DEBUG, "storage provider %s penalized %s for continued fault", rt.Receiver(), penaltyTarget)
 
 			penaltyFromVesting, penaltyFromBalance, err := st.RepayPartialDebtInPriorityOrder(store, currEpoch, rt.CurrentBalance())
