@@ -761,10 +761,10 @@ func (a Actor) PreCommitSectorBatch(rt Runtime, params *PreCommitSectorBatchPara
 			builtin.RequireNoErr(rt, err, exitcode.ErrIllegalState, "failed to apply penalty")
 			if !aggregateFee.NilOrZero() && err == nil {
 				PubPenaltyMsg(rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), aggregateFee.String(),
-					"ApplyRewards", "")
+					"PreCommitSectorBatch", "")
 				rt.Log(rtt.INFO, fmt.Sprintf("penalty: from %v to %v, height: %v, fine: %v, callfunction: %v, suncause: %v",
 					rt.Caller().String(), rt.Receiver().String(), int64(rt.CurrEpoch()), aggregateFee.String(),
-					"ApplyRewards", ""))
+					"PreCommitSectorBatch", ""))
 			}
 		}
 
